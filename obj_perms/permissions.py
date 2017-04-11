@@ -2,7 +2,8 @@
 # Include 'ObjectPermissions' nested class in model definition with
 # methods named by desired permission codename.
 
-from .utils import ObjectPermissionsBase
+from django.core.exceptions import PermissionDenied
+from obj_perms.utils import ObjectPermissionsBase
 
 class ObjectPermissionTester(ObjectPermissionsBase):
     """
@@ -33,11 +34,17 @@ class ObjectPermissionTester(ObjectPermissionsBase):
 
         return check_perm(user, perm, obj)
 
-    def has_perms(self, user, perms, obj):
-        return all(self.has_perm(user, perm, obj) for perm in perms)
+    def has_perms(self, user, perm_list, obj):
+        return all(self.has_perm(user, perm, obj) for perm in perm_list)
 
     def get_object_permissions(self, user, obj):
-        return set(
-            '{0}.{1}'.format(self.app_label, perm)
-            for perm in self.perms if self.has_perm(user, perm, obj)
-        )
+        perms = set()
+
+        for perm in self.perms:
+            try:
+                if self.has_perm(user, perm, obj):
+                    perms.add('{0}.{1}'.format(self.app_label, perm))
+            except PermissionDenied:
+                pass
+
+        return perms

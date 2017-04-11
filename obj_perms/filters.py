@@ -2,7 +2,7 @@
 # Include 'ObjectPermissionFilters' nested class in model definition
 # with methods named by desired permission codename.
 
-from .utils import ObjectPermissionsBase
+from obj_perms.utils import ObjectPermissionsBase
 
 class ObjectPermissionFilter(ObjectPermissionsBase):
     """
