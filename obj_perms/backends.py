@@ -1,6 +1,6 @@
 # User model mixins
 
-from .permissions import ObjectPermissionTester
+from obj_perms.permissions import ObjectPermissionTester
 
 class ObjectPermissionsBackend:
     """
@@ -15,6 +15,7 @@ class ObjectPermissionsBackend:
     
     def has_perm(self, user_obj, perm, obj=None):
         try:
+            # TODO: weakly cache user/obj combinations
             obj_perm = ObjectPermissionTester(obj)
             if obj_perm.has_perm(user_obj, perm, obj):
                 return True
@@ -26,11 +27,9 @@ class ObjectPermissionsBackend:
     def get_all_permissions(self, user_obj, obj=None):
         try:
             obj_perm = ObjectPermissionTester(obj)
-            perms = obj_perm.get_object_permissions(user_obj, obj)
+            return obj_perm.get_object_permissions(user_obj, obj)
         except AttributeError:
-            perms = set()
-
-        return perms
+            return set()
 
     # TODO: get_group_permissions()?
     # TODO: get_user_permissions() separately?

@@ -1,6 +1,7 @@
 # Uses inner classes for models to specify object permission checking.
 # Include 'ObjectPermissions' nested class in model definition with
-# methods named by desired permission codename.
+# methods named by desired permission codename. Each method should have
+# the signature 'codename(user, obj)'.
 
 from django.core.exceptions import PermissionDenied
 from obj_perms.utils import ObjectPermissionsBase
@@ -22,7 +23,6 @@ class ObjectPermissionTester(ObjectPermissionsBase):
         """
         Check if user has perm for obj.
         """
-
         app_label, codename = self._split_perm(perm)
 
         # TODO: check perm cache
@@ -32,7 +32,7 @@ class ObjectPermissionTester(ObjectPermissionsBase):
         if check_perm is None:
             return self.DEFAULT_PERMISSION
 
-        return check_perm(user, perm, obj)
+        return check_perm(user, obj)
 
     def has_perms(self, user, perm_list, obj):
         return all(self.has_perm(user, perm, obj) for perm in perm_list)
@@ -40,10 +40,10 @@ class ObjectPermissionTester(ObjectPermissionsBase):
     def get_object_permissions(self, user, obj):
         perms = set()
 
-        for perm in self.perms:
+        for perm in self.get_available_permissions():
             try:
                 if self.has_perm(user, perm, obj):
-                    perms.add('{0}.{1}'.format(self.app_label, perm))
+                    perms.add(perm)
             except PermissionDenied:
                 pass
 

@@ -1,6 +1,7 @@
 # Uses inner classes for models to specify object permission filtering.
 # Include 'ObjectPermissionFilters' nested class in model definition
-# with methods named by desired permission codename.
+# with methods named by desired permission codename. Each method should
+# have the signature 'codename(user, queryset)'.
 
 from obj_perms.utils import ObjectPermissionsBase
 
@@ -33,7 +34,7 @@ class ObjectPermissionFilter(ObjectPermissionsBase):
 
             # Return default if codename not defined
             if filter_perm is not None:
-                queryset = filter_perm(user, perm, queryset)
+                queryset = filter_perm(user, queryset)
             else if not self.DEFAULT_PERMISSION:
                 queryset = queryset.none()
                 # Short-circuit here, queryset already empty
