@@ -4,47 +4,72 @@
 # the signature 'codename(user, obj)'.
 
 from django.core.exceptions import PermissionDenied
-from obj_perms.utils import ObjectPermissionsBase
+from obj_perms.utils import split_perm, available_permissions
 
-class ObjectPermissionTester(ObjectPermissionsBase):
-    """
-    User permission checker for given object.
-    """
 
-    def __init__(self, model, class_name='ObjectPermissions'):
-        super().__init__(self, model, class_name)
+DEFAULT_ATTR = 'ObjectPermissions'
 
-        # Get default result
-        self.DEFAULT_PERMISSION = getattr(
-            obj_perms, 'DEFAULT_PERMISSION', False
-        )
 
-    def has_perm(self, user, perm, obj):
-        """
-        Check if user has perm for obj.
-        """
-        app_label, codename = self._split_perm(perm)
+def has_obj_perm(user_obj, perm, obj, default=False,
+                 attr_name=DEFAULT_ATTR, obj_perms=None):
+    try:
+        if obj_perms is None:
+            obj_perms = getattr(obj, attr_name)
+
+        app_label, codename = split_perm(obj, perm)
 
         # TODO: check perm cache
-        check_perm = getattr(self.obj_perms, codename, None)
+        return getattr(obj_perms, codename)(user_obj, obj)
 
-        # Return default if codename not defined
-        if check_perm is None:
-            return self.DEFAULT_PERMISSION
+    except AttributeError:
+        # Return default if no object permissions defined
+        # or object permissions does not define perm
+        return default
 
-        return check_perm(user, obj)
 
-    def has_perms(self, user, perm_list, obj):
-        return all(self.has_perm(user, perm, obj) for perm in perm_list)
+def has_obj_perms(user_obj, perm_list, obj,
+                  default=False, attr_name=DEFAULT_ATTR):
+    # Prefetch obj_perms
+    try:
+        obj_perms = getattr(obj, attr_name)
+    except AttributeError:
+        return default
 
-    def get_object_permissions(self, user, obj):
-        perms = set()
+    for perm in perm_list:
+        # Let PermissionDenied bubble
+        has_perm = has_obj_perm(
+            user_obj, perm, obj, default, attr_name, obj_perms
+        )
+        # Short-circuit return if any permission not granted
+        if not has_perm:
+            return False
 
-        for perm in self.get_available_permissions():
-            try:
-                if self.has_perm(user, perm, obj):
-                    perms.add(perm)
-            except PermissionDenied:
-                pass
+    return True
 
-        return perms
+
+def get_all_object_permissions(user_obj, obj, default=False,
+                               prepend_label=True, attr_name=DEFAULT_ATTR):
+    # Prefetch obj_perms
+    try:
+        obj_perms = getattr(obj, attr_name)
+    except AttributeError:
+        return default
+
+    perm_list = set()
+
+    for perm in available_permissions(obj, prepend_label):
+        try:
+            # Use prefetched obj_perms instead of getattr() every time
+            has_perm = has_obj_perm(
+                user_obj, perm, obj, default, attr_name, obj_perms
+            )
+            if has_perm:
+                perm_list.add(perm)
+
+        except PermissionDenied:
+            # PermissionDenied is to short-circuit backend checks,
+            # so it doesn't apply here
+            pass
+
+    return perm_list
+
