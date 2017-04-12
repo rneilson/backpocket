@@ -18,7 +18,7 @@ def filter_queryset(self, user, perms, queryset,
     """
 
     try:
-        perm_filters = getattr(queryset.model, attr_name)
+        filters_obj = getattr(queryset.model, attr_name)
     except AttributeError:
         return queryset if default else queryset.none()
 
@@ -31,7 +31,7 @@ def filter_queryset(self, user, perms, queryset,
 
         try:
             # TODO: check queryset cache
-            queryset = getattr(perm_filters, codename)(user, queryset)
+            queryset = getattr(filters_obj, codename)(user, queryset)
         except AttributeError:
             # Return default if codename not defined
             if not default:

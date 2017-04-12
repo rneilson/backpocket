@@ -11,15 +11,15 @@ DEFAULT_ATTR = 'ObjectPermissions'
 
 
 def has_obj_perm(user_obj, perm, obj, default=False,
-                 attr_name=DEFAULT_ATTR, obj_perms=None):
+                 attr_name=DEFAULT_ATTR, perms_obj=None):
     try:
-        if obj_perms is None:
-            obj_perms = getattr(obj, attr_name)
+        if perms_obj is None:
+            perms_obj = getattr(obj, attr_name)
 
         app_label, codename = split_perm(obj, perm)
 
         # TODO: check perm cache
-        return getattr(obj_perms, codename)(user_obj, obj)
+        return getattr(perms_obj, codename)(user_obj, obj)
 
     except AttributeError:
         # Return default if no object permissions defined
@@ -29,16 +29,16 @@ def has_obj_perm(user_obj, perm, obj, default=False,
 
 def has_obj_perms(user_obj, perm_list, obj,
                   default=False, attr_name=DEFAULT_ATTR):
-    # Prefetch obj_perms
+    # Prefetch perms_obj
     try:
-        obj_perms = getattr(obj, attr_name)
+        perms_obj = getattr(obj, attr_name)
     except AttributeError:
         return default
 
     for perm in perm_list:
         # Let PermissionDenied bubble
         has_perm = has_obj_perm(
-            user_obj, perm, obj, default, attr_name, obj_perms
+            user_obj, perm, obj, default, attr_name, perms_obj
         )
         # Short-circuit return if any permission not granted
         if not has_perm:
@@ -49,9 +49,9 @@ def has_obj_perms(user_obj, perm_list, obj,
 
 def get_all_object_permissions(user_obj, obj, default=False,
                                prepend_label=True, attr_name=DEFAULT_ATTR):
-    # Prefetch obj_perms
+    # Prefetch perms_obj
     try:
-        obj_perms = getattr(obj, attr_name)
+        perms_obj = getattr(obj, attr_name)
     except AttributeError:
         return default
 
@@ -59,9 +59,9 @@ def get_all_object_permissions(user_obj, obj, default=False,
 
     for perm in available_permissions(obj, prepend_label):
         try:
-            # Use prefetched obj_perms instead of getattr() every time
+            # Use prefetched perms_obj instead of getattr() every time
             has_perm = has_obj_perm(
-                user_obj, perm, obj, default, attr_name, obj_perms
+                user_obj, perm, obj, default, attr_name, perms_obj
             )
             if has_perm:
                 perm_list.add(perm)
