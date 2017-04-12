@@ -3,42 +3,40 @@
 # with methods named by desired permission codename. Each method should
 # have the signature 'codename(user, queryset)'.
 
-from obj_perms.utils import ObjectPermissionsBase
+from obj_perms.utils import split_perm
 
-class ObjectPermissionFilter(ObjectPermissionsBase):
+
+DEFAULT_ATTR = 'ObjectPermissionFilters'
+
+
+def filter_queryset(self, user, perms, queryset,
+                    default=False, attr_name=DEFAULT_ATTR):
     """
-    User permission filter for given model.
+    Filter queryset by user and required permission(s).
+    If default is True, queryset will be unchanged if a permission
+    is not found; if False, queryset.none() will be returned.
     """
 
-    def __init__(self, model, class_name='ObjectPermissionFilters'):
-        super().__init__(self, model, class_name)
+    try:
+        perm_filters = getattr(queryset.model, attr_name)
+    except AttributeError:
+        return queryset if default else queryset.none()
 
-        # Get default filter (True for all, False for none)
-        self.DEFAULT_PERMISSION = getattr(
-            obj_perms, 'DEFAULT_PERMISSION', True
-        )
-    
-    def filter_queryset(self, user, perms, queryset):
-        """
-        Filter queryset by user and required perms.
-        """
+    # Turn single perm into an iterable to keep everything simple
+    if isinstance(perms, str):
+        perms = (perms,)
 
-        if isinstance(perms, str):
-            perms = (perms,)
+    for perm in perms:
+        app_label, codename = split_perm(perm)
 
-        for perm in perms:
-            app_label, codename = self._split_perm(perm)
-
+        try:
             # TODO: check queryset cache
-            filter_perm = getattr(self.obj_perms, codename, None)
-
+            queryset = getattr(perm_filters, codename)(user, queryset)
+        except AttributeError:
             # Return default if codename not defined
-            if filter_perm is not None:
-                queryset = filter_perm(user, queryset)
-            else if not self.DEFAULT_PERMISSION:
+            if not default:
                 queryset = queryset.none()
                 # Short-circuit here, queryset already empty
                 break
 
-        return queryset
-
+    return queryset
