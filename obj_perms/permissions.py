@@ -49,13 +49,14 @@ def has_obj_perms(user_obj, perm_list, obj,
 
 def get_all_object_permissions(user_obj, obj, default=False,
                                prepend_label=True, attr_name=DEFAULT_ATTR):
+    # Start with empty set
+    perm_list = set()
+
     # Prefetch perms_obj
     try:
         perms_obj = getattr(obj, attr_name)
     except AttributeError:
-        return default
-
-    perm_list = set()
+        return perm_list
 
     for perm in available_permissions(obj, prepend_label):
         try:
