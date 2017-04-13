@@ -26,6 +26,9 @@ class ObjectPermissionsBackend:
         if not self._check_user(user_obj):
             return False
 
+        if not obj:
+            return self.DEFAULT_PERMISSION
+
         kwargs = { 'default': self.DEFAULT_PERMISSION }
 
         if self.DEFAULT_ATTR_NAME is not None:
@@ -34,7 +37,7 @@ class ObjectPermissionsBackend:
         return has_obj_perm(user_obj, perm, obj, **kwargs)
 
     def get_all_permissions(self, user_obj, obj=None):
-        if not self._check_user(user_obj):
+        if not self._check_user(user_obj) or not obj:
             return set()
 
         kwargs = { 'default': self.DEFAULT_PERMISSION }
