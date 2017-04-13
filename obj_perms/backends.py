@@ -5,13 +5,30 @@ from obj_perms.permissions import has_obj_perm, get_all_object_permissions
 class ObjectPermissionsBackend:
     """
     Backend to check object permissions to a user model.
-    Only use in conjunction with standard PermissionsMixin or
-    equivalent which checks all auth backends.
+    Only use in conjunction with a user model which includes
+    the standard PermissionsMixin (or equivalent) and provides
+    'has_perm()' and 'get_all_permissions()' attributes.
     """
 
-    DEFAULT_PERMISSION = False
+    # Override this to use a different model attribute name for
+    # checking object permissions (default 'ObjectPermissions').
     DEFAULT_ATTR_NAME = None
+
+    # Override this if object permissions are to be implicitly
+    # granted unless specifically denied (use with caution!).
+    DEFAULT_PERMISSION = False
+
+    # Override this to delegate permission checks for 
+    # unauthenticated users to permission-specific method(s).
     ALLOW_ANONYMOUS_USER = False
+
+    # Override this to also check permissions which would be
+    # granted with obj=None. This can be used as a shortcut to
+    # calling 'user.has_perm(perm, obj=None)' in all permission-
+    # specific methods. Requires an additional authentication
+    # backend which implements at minimum 'has_perm()' and
+    # 'get_all_permissions()'.
+    INCLUDE_GENERAL_PERMISSIONS = False
 
     def _check_user(self, user_obj):
         if not user_obj:
@@ -23,20 +40,26 @@ class ObjectPermissionsBackend:
         return None
     
     def has_perm(self, user_obj, perm, obj=None):
+        # Ensure valid user given
         if not self._check_user(user_obj):
             return False
-
-        if not obj:
-            return self.DEFAULT_PERMISSION
 
         kwargs = { 'default': self.DEFAULT_PERMISSION }
 
         if self.DEFAULT_ATTR_NAME is not None:
             kwargs['attr_name'] = self.DEFAULT_ATTR_NAME
 
-        return has_obj_perm(user_obj, perm, obj, **kwargs)
+        # Will return default if no object given
+        user_has_perm = has_obj_perm(user_obj, perm, obj, **kwargs)
+
+        # Otherwise check for permission excluding object
+        if not user_has_perm and self.INCLUDE_GENERAL_PERMISSIONS:
+            user_has_perm = user_obj.has_perm(perm, obj=None)
+
+        return user_has_perm
 
     def get_all_permissions(self, user_obj, obj=None):
+        # Ensure valid user given, short-circuit obj=None case
         if not self._check_user(user_obj) or not obj:
             return set()
 
@@ -45,7 +68,14 @@ class ObjectPermissionsBackend:
         if self.DEFAULT_ATTR_NAME is not None:
             kwargs['attr_name'] = self.DEFAULT_ATTR_NAME
 
-        return get_all_object_permissions(user_obj, obj, **kwargs)
+        # Will return empty set if object not given
+        user_perms = get_all_object_permissions(user_obj, obj, **kwargs)
+
+        # Also check for permissions excluding object
+        if self.INCLUDE_GENERAL_PERMISSIONS:
+            user_perms.update(user_obj.get_all_permissions(obj=None))
+
+        return user_perms
 
     # TODO: get_group_permissions()?
-    # TODO: get_user_permissions() separately?
+    # TODO: if so, separate get_user_permissions()?
