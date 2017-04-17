@@ -16,9 +16,10 @@ def filter_queryset(self, user, perms, queryset,
     If default is True, queryset will be unchanged if a permission
     is not found; if False, queryset.none() will be returned.
     """
+    model = queryset.model
 
     try:
-        filters_obj = getattr(queryset.model, attr_name)
+        filters_obj = getattr(model, attr_name)
     except AttributeError:
         return queryset if default else queryset.none()
 
@@ -27,7 +28,7 @@ def filter_queryset(self, user, perms, queryset,
         perms = (perms,)
 
     for perm in perms:
-        app_label, codename = split_perm(perm)
+        app_label, codename = split_perm(model, perm)
 
         try:
             # TODO: check queryset cache
