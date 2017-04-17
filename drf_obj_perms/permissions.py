@@ -136,7 +136,8 @@ class ModelObjectPermissions(BasePermission):
                     raise Http404
 
                 read_perms = self.get_required_permissions(
-                    self.obj_read_only_lookup_key, model_cls, 'obj_perms_map'
+                    self.obj_read_only_lookup_key, model_cls,
+                    request=request, attr_name='obj_perms_map'
                 )
                 if not user.has_perms(read_perms, obj):
                     raise Http404
