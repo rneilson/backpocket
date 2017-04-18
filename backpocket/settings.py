@@ -31,6 +31,12 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'backpocket.users.apps.UsersConfig',
+    'backpocket.pages.apps.PagesConfig',
+    'backpocket.links.apps.LinksConfig',
+    'backpocket.lists.apps.ListsConfig',
+    'backpocket.api.apps.ApiConfig',
+    'backpocket.portal.apps.PortalConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
