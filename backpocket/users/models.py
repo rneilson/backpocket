@@ -37,6 +37,10 @@ class UserManager(BaseUserManager):
     def create_user(self, username, password=None, **extra_fields):
         extra_fields.setdefault('is_superuser', False)
 
+        if extra_fields.get('is_superuser') is True:
+            raise ValueError('Normal user must have is_superuser=False.')
+
+        # TODO: create default list(s)
         return self._create_user(username, password, **extra_fields)
 
     def create_superuser(self, username, password, **extra_fields):
@@ -59,10 +63,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Quite nonstandard permissions
         permissions = (
             ('view_user', 'Can view user'),
+            ('view_admin', 'Can view admin interface'),
             ('set_user_admin', 'Can set user as admin'),
             ('set_user_active', 'Can activate/deactivate user'),
             ('set_user_password', 'Can set user password'),
             ('reset_user_password', 'Can reset user password'),
+            ('change_user_groups', 'Can change user groups'),
         )
 
     class ObjectPermissions:
@@ -107,8 +113,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_staff(self):
         if self.is_superuser:
             return True
-        # TODO: check if in admin group
-        return False
+        # Check for admin permission, cache result
+        if not hasattr(self, '_is_staff'):
+            self._is_staff = self.has_perm('view_admin')
+        return self._is_staff
 
     def get_short_name(self):
         return self.username
