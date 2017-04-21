@@ -109,6 +109,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     EMAIL_FIELD = 'email'
     REQUIRED_FIELDS = ['email']
 
+    objects = UserManager()
+
     @property
     def is_staff(self):
         if self.is_superuser:
