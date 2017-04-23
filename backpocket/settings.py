@@ -131,3 +131,7 @@ STATIC_URL = '/static/'
 # Backpocket defaults
 
 AUTH_USER_MODEL = 'bp_users.User'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'backpocket.users.backends.ObjectPermissionsBackend',
+]
