@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'backpocket.pages.apps.PagesConfig',
     'backpocket.links.apps.LinksConfig',
     'backpocket.lists.apps.ListsConfig',
+    'obj_perms',
+    'drf_obj_perms',
     'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -83,7 +85,7 @@ WSGI_APPLICATION = 'backpocket.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': os.path.join(BASE_DIR, 'data', 'db.sqlite3'),
     }
 }
 
