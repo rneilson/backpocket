@@ -31,7 +31,7 @@ class ObjectPermissionsBackend:
     INCLUDE_GENERAL_PERMISSIONS = False
 
     def _check_user(self, user_obj):
-        if not user_obj:
+        if not user_obj or not user_obj.is_active:
             return False
         return (user_obj.is_authenticated or self.ALLOW_ANONYMOUS_USER)
 
