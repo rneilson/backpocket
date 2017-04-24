@@ -24,7 +24,7 @@ class UserManager(BaseUserManager):
             raise ValueError('The given username must be set')
 
         username = self.model.normalize_username(username)
-        email = self.normalize_email(extra_fields.get('email', None))
+        email = self.normalize_email(extra_fields.pop('email', None))
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.full_clean()
