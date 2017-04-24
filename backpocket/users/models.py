@@ -64,12 +64,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Quite nonstandard permissions
         permissions = (
             ('view_user', 'Can view user'),
-            ('view_admin', 'Can view admin interface'),
-            ('set_user_admin', 'Can set user as admin'),
+            ('view_admin', 'Can access admin interface'),
             ('set_user_active', 'Can activate/deactivate user'),
             ('set_user_password', 'Can set user password'),
             ('reset_user_password', 'Can reset user password'),
             ('change_user_groups', 'Can change user groups'),
+            ('change_user_permissions', 'Can change user permissions'),
         )
 
     class ObjectPermissions:
@@ -100,9 +100,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         def view_admin(self, user, obj):
             return False
 
-        def set_user_admin(self, user, obj):
-            return False
-
         def set_user_active(self, user, obj):
             return self._is_admin_or_self(user, obj)
 
@@ -113,6 +110,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self._is_admin_or_self(user, obj)
 
         def change_user_groups(self, user, obj):
+            return False
+
+        def change_user_permissions(self, user, obj):
             return False
 
     class ObjectPermissionFilters:
@@ -176,7 +176,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             return True
         # Check for admin permission, cache result
         if not hasattr(self, '_is_staff'):
-            self._is_staff = self.has_perm('view_admin')
+            self._is_staff = self.has_perm('bp_users.view_admin')
         return self._is_staff
 
     def get_short_name(self):
