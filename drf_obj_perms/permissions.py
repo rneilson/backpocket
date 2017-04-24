@@ -22,7 +22,7 @@ class ModelObjectPermissions(BasePermission):
         'GET': (),
         'OPTIONS': (),
         'HEAD': (),
-        'POST': ('%(app_label)s.add_%(model_name)s',),
+        'POST': ('{app_label}.add_{model_name}',),
         'PUT': (),
         'PATCH': (),
         'DELETE': (),
@@ -36,9 +36,9 @@ class ModelObjectPermissions(BasePermission):
         'OPTIONS': (),
         'HEAD': (),
         'POST': (),
-        'PUT': ('%(app_label)s.change_%(model_name)s',),
-        'PATCH': ('%(app_label)s.change_%(model_name)s',),
-        'DELETE': ('%(app_label)s.delete_%(model_name)s',),
+        'PUT': ('{app_label}.change_{model_name}',),
+        'PATCH': ('{app_label}.change_{model_name}',),
+        'DELETE': ('{app_label}.delete_{model_name}',),
     }
 
     # Lookup keys for obj_perms_map to check read-only permission
@@ -155,7 +155,7 @@ class ActionModelObjectPermissions(ModelObjectPermissions):
     """
     perms_map = {
         'list': (),
-        'create': ('%(app_label)s.add_%(model_name)s',),
+        'create': ('{app_label}.add_{model_name}',),
         'retrieve': (),
         'update': (),
         'partial_update': (),
@@ -165,9 +165,9 @@ class ActionModelObjectPermissions(ModelObjectPermissions):
 
     obj_perms_map = {
         'retrieve': (),
-        'update': ('%(app_label)s.change_%(model_name)s',),
-        'partial_update': ('%(app_label)s.change_%(model_name)s',),
-        'destroy': ('%(app_label)s.delete_%(model_name)s',),
+        'update': ('{app_label}.change_{model_name}',),
+        'partial_update': ('{app_label}.change_{model_name}',),
+        'destroy': ('{app_label}.delete_{model_name}',),
         'metadata': (),
     }
 
