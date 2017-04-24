@@ -1,6 +1,7 @@
 # User model mixins
 
 from obj_perms.permissions import has_obj_perm, get_all_object_permissions
+from obj_perms.utils import available_permissions
 
 class ObjectPermissionsBackend:
     """
@@ -53,7 +54,9 @@ class ObjectPermissionsBackend:
         user_has_perm = has_obj_perm(user_obj, perm, obj, **kwargs)
 
         # Otherwise check for permission excluding object
-        if not user_has_perm and self.INCLUDE_GENERAL_PERMISSIONS:
+        if (obj is not None and
+                not user_has_perm and
+                self.INCLUDE_GENERAL_PERMISSIONS):
             user_has_perm = user_obj.has_perm(perm, obj=None)
 
         return user_has_perm
@@ -73,7 +76,9 @@ class ObjectPermissionsBackend:
 
         # Also check for permissions excluding object
         if self.INCLUDE_GENERAL_PERMISSIONS:
-            user_perms.update(user_obj.get_all_permissions(obj=None))
+            for perm in available_permissions(obj, prepend_label=True):
+                if user_obj.has_perm(perm):
+                    user_perms.add(perm)
 
         return user_perms
 
