@@ -162,3 +162,13 @@ class UserAdmin(BaseUserAdmin):
                 raise PermissionDenied
 
         return super().save_model(request, obj, form, change)
+
+    def has_add_permission(self, request):
+        return request.user.has_perm('bp_users.add_user')
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.has_perm('bp_users.change_user', obj)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.has_perm('bp_users.delete_user', obj)
+
