@@ -17,7 +17,7 @@ class UserObjectPermissions(BaseActionObjectPermissions):
     }
 
     obj_perms_map = {
-        **BaseActionObjectPermissions.perms_map,
+        **BaseActionObjectPermissions.obj_perms_map,
         'activate': ('{app_label}.set_user_active',),
         'password': ('{app_label}.set_user_password',),
         'reset_password': ('{app_label}.reset_user_password',),
