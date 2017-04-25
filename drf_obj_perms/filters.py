@@ -56,7 +56,7 @@ class ActionObjectPermissionsFilter(BaseFilterBackend):
             'app_label': meta.app_label,
             'model_name': meta.model_name
         }
-        perms = (perm.format(**kwargs) for perm in perms)
+        perms = [perm.format(**kwargs) for perm in perms]
         user = request.user
 
         return obj_filter_queryset(
