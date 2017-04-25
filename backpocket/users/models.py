@@ -53,9 +53,73 @@ class UserManager(BaseUserManager):
         return self._create_user(username, password, **extra_fields)
 
 
+class UserObjectPermissions:
+
+    def _is_self(self, user, obj):
+        if isinstance(obj, User):
+            return obj.id == user.id
+        return False
+
+    def _is_admin_or_self(self, user, obj):
+        # TODO: add parent-user check for sub-users (eventually)
+        return user.is_staff or self._is_self(user, obj)
+
+    def add_user(self, user, obj):
+        return False
+
+    def change_user(self, user, obj):
+        return self._is_self(user, obj)
+
+    def delete_user(self, user, obj):
+        return self._is_self(user, obj)
+
+    def view_user(self, user, obj):
+        # TODO: add is_public and/or friends field checks (eventually)
+        return self._is_admin_or_self(user, obj)
+
+    def view_admin(self, user, obj):
+        return False
+
+    def set_user_active(self, user, obj):
+        return self._is_admin_or_self(user, obj)
+
+    def set_user_password(self, user, obj):
+        return self._is_self(user, obj)
+
+    def reset_user_password(self, user, obj):
+        return self._is_admin_or_self(user, obj)
+
+    def change_user_groups(self, user, obj):
+        return False
+
+    def change_user_permissions(self, user, obj):
+        return False
+
+
+class UserObjectPermissionFilters:
+    # TODO: flesh out
+
+    def _admin_all_user_own(self, user, queryset):
+        model = queryset.model
+
+        if user.is_staff:
+            # TODO: disallow admins from viewing superusers?
+            return queryset
+
+        if model == User:
+            # TODO: add parent-user check for sub-users (eventually)
+            # TODO: add is_public and/or friends field checks (eventually)
+            return queryset.filter(pk=user.id)
+
+        return queryset.none()
+
+    def view_user(self, user, queryset):
+        return self._admin_all_user_own(user, queryset)
+
+
 class User(AbstractBaseUser, PermissionsMixin):
 
-    class Meta: 
+    class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
         default_related_name = 'users'
@@ -72,69 +136,9 @@ class User(AbstractBaseUser, PermissionsMixin):
             ('change_user_permissions', 'Can change user permissions'),
         )
 
-    class ObjectPermissions:
-        # TODO: flesh out
+    ObjectPermissions = UserObjectPermissions()
 
-        def _is_self(self, user, obj):
-            if isinstance(obj, User):
-                return obj.id == user.id
-            return False
-
-        def _is_admin_or_self(self, user, obj):
-            # TODO: add parent-user check for sub-users (eventually)
-            return user.is_staff or self._is_self(user, obj)
-
-        def add_user(self, user, obj):
-            return False
-
-        def change_user(self, user, obj):
-            return self._is_self(user, obj)
-
-        def delete_user(self, user, obj):
-            return self._is_self(user, obj)
-
-        def view_user(self, user, obj):
-            # TODO: add is_public and/or friends field checks (eventually)
-            return self._is_admin_or_self(user, obj)
-
-        def view_admin(self, user, obj):
-            return False
-
-        def set_user_active(self, user, obj):
-            return self._is_admin_or_self(user, obj)
-
-        def set_user_password(self, user, obj):
-            return self._is_self(user, obj)
-
-        def reset_user_password(self, user, obj):
-            return self._is_admin_or_self(user, obj)
-
-        def change_user_groups(self, user, obj):
-            return False
-
-        def change_user_permissions(self, user, obj):
-            return False
-
-    class ObjectPermissionFilters:
-        # TODO: flesh out
-
-        def _admin_all_user_own(self, user, queryset):
-            model = queryset.model
-
-            if user.is_staff:
-                # TODO: disallow admins from viewing superusers?
-                return queryset
-
-            if model == User:
-                # TODO: add parent-user check for sub-users (eventually)
-                # TODO: add is_public and/or friends field checks (eventually)
-                return queryset.filter(pk=user.id)
-
-            return queryset.none()
-
-        def view_user(self, user, queryset):
-            return self._admin_all_user_own(user, queryset)
-
+    ObjectPermissionFilters = UserObjectPermissionFilters()
 
     # UUIDv4 for long-term sanity
     id = models.UUIDField(
