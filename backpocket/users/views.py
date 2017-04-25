@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from backpocket.users.models import User
-from backpocket.users.serializers import UserSerializer
+from backpocket.users.serializers import (
+    UserSerializer, CreateUserSerializer
+)
 from backpocket.users.permissions import (
     UserObjectPermissions, UserObjectPermissionFilter
 )
@@ -12,8 +14,15 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     permission_classes = [UserObjectPermissions]
     filter_backends = [UserObjectPermissionFilter]
-    serializer_class = UserSerializer
     queryset = User.objects.all()
+
+    serializer_class = UserSerializer
+    serializer_map = {
+        'create': CreateUserSerializer,
+    }
+
+    def get_serializer_class(self):
+        return self.serializer_map.get(self.action, self.serializer_class)
 
     # TODO: user groups detail view
     # TODO: user permissions detail view
