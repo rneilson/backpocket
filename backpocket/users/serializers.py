@@ -46,9 +46,8 @@ class CreateUserSerializer(serializers.ModelSerializer):
         try:
             password_validation.validate_password(password, user=user)
         except DjangoValidationError as e:
-            raise serializers.ValidationError(
-                {'password': get_error_detail(e)}
-            )
+            self._errors = {'password': get_error_detail(e)}
+            raise serializers.ValidationError(self.errors)
         # Now save and return
         user.save()
         return user
