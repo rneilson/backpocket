@@ -9,7 +9,7 @@ from obj_perms.utils import split_perm
 DEFAULT_ATTR = 'ObjectPermissionFilters'
 
 
-def filter_queryset(self, user, perms, queryset,
+def filter_queryset(user, perms, queryset,
                     default=False, attr_name=DEFAULT_ATTR):
     """
     Filter queryset by user and required permission(s).
